@@ -5,7 +5,7 @@
 ## 还要替换的地方
 
 1. `src/config/siteConfig.ts`
-   - `site_url`：当前是 `https://jinlinxingjian-blog.vercel.app`，买域名后改成正式域名
+   - `site_url`：当前是 `https://jinlinxingjian-blog.pages.dev`，买域名后改成正式域名
    - `title` / `subtitle` / `description`
 2. `src/config/profileConfig.ts`
    - `name` / `bio` / 社交链接

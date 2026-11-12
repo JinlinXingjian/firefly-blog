@@ -6,6 +6,10 @@ import { resolveSiteLang } from "../utils/site-config-utils";
 // 语言代码，例如：'zh_CN', 'zh_TW', 'en', 'ja', 'ru', 'ko'。
 const SITE_LANG = resolveSiteLang("zh_CN");
 
+// 构建时可通过 SITE_URL 覆盖，GitHub Pages 镜像使用
+const SITE_URL =
+	process.env.SITE_URL || "https://jinlinxingjian-blog.pages.dev";
+
 // 页面开关配置 - 控制特定页面的访问权限，设为false会返回404并自动隐藏对应的导航栏菜单项
 const pages = resolvePageToggles({
 	// ── 社交 (Social) ──────────────────────────────────
@@ -49,7 +53,7 @@ export const siteConfig: SiteConfig = {
 
 	// 站点 URL
 	// 换自定义域名后，把这里改成正式域名
-	site_url: "https://jinlinxingjian-blog.vercel.app",
+	site_url: SITE_URL,
 
 	// 站点描述
 	description: "一个记录技术、学习与生活的个人博客。",

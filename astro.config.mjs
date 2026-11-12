@@ -65,11 +65,15 @@ const adapter = process.env.CF_WORKERS
 		})
 	: undefined;
 
+// GitHub Pages 项目站点需要子路径，例如 /firefly-blog/
+const basePath = process.env.BASE_PATH || "/";
+const siteUrl = process.env.SITE_URL || siteConfig.site_url;
+
 // https://astro.build/config
 export default defineConfig({
-	site: siteConfig.site_url,
+	site: siteUrl,
 
-	base: "/",
+	base: basePath,
 	trailingSlash: "always",
 
 	// 字体配置 - 只加载实际使用的字体，跳过未引用的以加快构建

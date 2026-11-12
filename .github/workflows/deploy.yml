@@ -1,8 +1,7 @@
 name: Deploy to GitHub Pages
 
 on:
-  push:
-    branches: [ master ]
+  # 默认只保留手动触发，主站已迁到 Cloudflare Pages
   workflow_dispatch:
 
 # Pages 部署需要的权限
@@ -39,6 +38,10 @@ jobs:
       
       - name: Build site
         run: pnpm run build
+        env:
+          # 项目站点地址：https://<user>.github.io/<repo>/
+          BASE_PATH: /firefly-blog/
+          SITE_URL: https://jinlinxingjian.github.io
 
       - name: Create .nojekyll file
         run: touch dist/.nojekyll
