@@ -47,14 +47,17 @@ git push
 
 ## Vercel 设置
 
+`vercel.json` 已固定使用 pnpm 11.22.0，避免 Vercel 自动选到旧版 pnpm。
+
 - Framework Preset: `Astro`
 - Root Directory: `./`
-- Install Command: `pnpm install`
-- Build Command: `pnpm build`
+- Install Command: `npx --yes pnpm@11.22.0 install --frozen-lockfile`
+- Build Command: `npx --yes pnpm@11.22.0 build`
 - Output Directory: `dist`
 - Node.js: `22.x`，如果提示低于 22.23，改用 `24.x`
-- 环境变量建议：`ENABLE_EXPERIMENTAL_COREPACK=1`
 - 不要设置 `CF_WORKERS`
+
+如果 Vercel 仍然报 pnpm 相关错误，再加环境变量 `ENABLE_EXPERIMENTAL_COREPACK=1`。
 
 ## 换电脑后
 
