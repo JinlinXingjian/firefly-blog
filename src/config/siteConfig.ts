@@ -48,8 +48,8 @@ export const siteConfig: SiteConfig = {
 	subtitle: "记录技术、学习与生活",
 
 	// 站点 URL
-	// TODO: 换成你的正式域名，例如 https://www.example.com
-	site_url: "https://example.com",
+	// 换自定义域名后，把这里改成正式域名
+	site_url: "https://jinlinxingjian-blog.vercel.app",
 
 	// 站点描述
 	description: "一个记录技术、学习与生活的个人博客。",
