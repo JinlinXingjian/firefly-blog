@@ -8,7 +8,7 @@
 - 备用：https://jinlinxingjian-blog.vercel.app （Vercel，`vercel.app` 在国内可能被 DNS 污染）
 - 源码：https://github.com/JinlinXingjian/firefly-blog
 
-Cloudflare Pages 自动部署使用 `.github/workflows/deploy-cloudflare.yml`，需要在 GitHub 仓库添加 `CLOUDFLARE_API_TOKEN` Secret。配置好后，push 到 `master` 会自动构建并发布。
+Cloudflare Pages 自动部署使用 `.github/workflows/deploy-cloudflare.yml`，已配置 `CLOUDFLARE_API_TOKEN` Secret。push 到 `master` 会自动构建并发布。
 
 ## 还要替换的地方
 

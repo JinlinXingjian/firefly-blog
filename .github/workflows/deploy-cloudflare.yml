@@ -1,7 +1,8 @@
 name: Deploy to Cloudflare Pages
 
 on:
-  # 先在手动触发下验证；配置好 CLOUDFLARE_API_TOKEN 后再加上 push 自动触发
+  push:
+    branches: [ master ]
   workflow_dispatch:
 
 permissions:
