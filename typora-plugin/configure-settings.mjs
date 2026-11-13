@@ -59,6 +59,9 @@ HOTKEY = "ctrl+alt+b"
 NEW_POST_HOTKEY = "ctrl+alt+n"
 PUBLISH_HOTKEY = "ctrl+alt+p"
 PUBLISH_ALL_HOTKEY = "ctrl+alt+shift+p"
+TOOLS_HOTKEY = "ctrl+alt+o"
+KEY_HOTKEY = "ctrl+alt+k"
+TEST_HOTKEY = "ctrl+alt+t"
 # 这个路径由安装脚本自动写入当前电脑的仓库位置
 BLOG_ROOT = ${tomlString(repoRoot)}
 SITE_URL = ${tomlString(siteUrl)}`;

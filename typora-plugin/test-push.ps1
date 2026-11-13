@@ -19,6 +19,7 @@ function Fail-Test {
 }
 
 try {
+    Write-Output "BLOG_PROGRESS:正在检查 Git remote 配置..."
     $remote = (& git -C $RepoRoot remote get-url origin 2>&1 | Out-String).Trim()
     if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($remote)) {
         Fail-Test "仓库没有配置 origin。" "请先运行 install.ps1，或手动设置 origin。"
@@ -27,6 +28,7 @@ try {
         Fail-Test "origin 不是 SSH 地址。" "当前 origin：$remote`n请运行 setup-key.ps1 自动改为 SSH。"
     }
 
+    Write-Output "BLOG_PROGRESS:正在检查 SSH 认证..."
     $sshOutput = (& ssh -T -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new git@github.com 2>&1 | Out-String).Trim()
     $sshOk = $sshOutput -match '(?i)successfully authenticated'
     if (-not $sshOk) {
@@ -41,12 +43,14 @@ try {
         Fail-Test "SSH 认证失败。" ($hint + "`n`n" + $sshOutput)
     }
 
+    Write-Output "BLOG_PROGRESS:SSH 认证通过，正在读取仓库..."
     $lsOutput = (& git -C $RepoRoot ls-remote --heads origin 2>&1 | Out-String).Trim()
     if ($LASTEXITCODE -ne 0) {
         Fail-Test "SSH 认证成功，但读取 GitHub 仓库失败。" $lsOutput
     }
 
     $env:GIT_TERMINAL_PROMPT = "0"
+    Write-Output "BLOG_PROGRESS:正在检查推送权限..."
     $pushOutput = (& git -C $RepoRoot push --dry-run origin HEAD:refs/heads/master 2>&1 | Out-String).Trim()
     $pushCode = $LASTEXITCODE
     $pushAuthFailed = $pushOutput -match '(?i)(permission denied|publickey|could not read from remote|host key verification failed|repository not found|authentication failed)'
@@ -59,6 +63,7 @@ try {
         Fail-Test "推送测试未通过。" $pushOutput
     }
 
+    Write-Output "BLOG_PROGRESS:检查完成。"
     $message = if ($nonFastForward) {
         "SSH 认证成功，推送权限正常；本地分支落后于远程，发布前先执行 git pull --rebase。"
     } else {

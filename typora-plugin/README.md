@@ -40,9 +40,9 @@ Cloudflare Pages（Direct Upload）
 | ＋ 加号 | 新建文章（标题、分类、标签） | `Ctrl+Alt+N` |
 | ☁ 上传 | 发布当前文章 | `Ctrl+Alt+P` |
 | ↗ 外链 | 打开线上博客 | 无 |
-| ⋯ 其他 | 密钥管理 / 测试推送 / 文章目录 / GitHub / 使用说明 | 无 |
+| ⋯ 其他 | 密钥管理 / 测试推送 / 文章目录 / GitHub / 使用说明 | `Ctrl+Alt+O` |
 
-密钥管理和测试推送收在「⋯ 其他」里，主界面只保留常用按钮。
+密钥管理和测试推送收在「⋯ 其他」里，主界面只保留常用按钮。也可以直接按 `Ctrl+Alt+K` 打开密钥管理，按 `Ctrl+Alt+T` 测试推送。
 
 另外，`Ctrl+Alt+Shift+P` 可以发布 `src/content/posts/` 下所有博客改动。
 
@@ -172,7 +172,9 @@ Markdown 使用相对路径，不需要图床。
 5. 通过 SSH 443 推送到 GitHub；
 6. GitHub Actions 构建并发布到 Cloudflare Pages。
 
-发布成功后，Typora 会弹出提示；通常 1–2 分钟后线上生效。
+发布时会先显示进度弹窗，列出当前步骤和已等待时间；脚本结束后进度弹窗关闭，换成结果弹窗。结果弹窗不会自动消失，需要手动关闭。
+
+发布成功后，通常 1–2 分钟线上生效。
 
 如果 `draft: true`，文章会提交但线上不显示。
 
@@ -250,7 +252,9 @@ D:\Typora\resources\plugin\global\settings\settings.user.toml
 settings.user.toml.bak-年月日-时分秒
 ```
 
-如果你在 Typora 里自定义了其他浮动按钮，重新运行安装脚本会覆盖 `[action_buttons]`。
+安装脚本会写入 5 个博客按钮。如果你在 Typora 里自定义了其他浮动按钮，重新运行安装脚本会覆盖 `[action_buttons]`。
+
+如果右下角按钮没有显示，可以直接用快捷键：`Ctrl+Alt+O` 打开「其他」，`Ctrl+Alt+K` 打开密钥管理，`Ctrl+Alt+T` 测试推送。
 
 ---
 

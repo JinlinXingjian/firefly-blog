@@ -16,6 +16,73 @@ const { execFile, execFileSync } = require("child_process");
  * - 打开线上博客
  */
 class BlogPlugin extends BasePlugin {
+	style = () => `
+#ffbp-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 2147483647;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+	background: rgba(15, 23, 42, .38);
+	backdrop-filter: blur(3px);
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+#ffbp-overlay .ffbp-card {
+	width: min(560px, 92vw);
+	max-height: 82vh;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 22px 24px;
+	border: 1px solid rgba(127, 127, 127, .22);
+	border-radius: 14px;
+	background: var(--bg-color, #fff);
+	color: var(--text-color, #1f2937);
+	box-shadow: 0 24px 70px rgba(0, 0, 0, .35);
+}
+#ffbp-overlay .ffbp-head {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font-size: 18px;
+	font-weight: 600;
+}
+#ffbp-overlay .ffbp-spinner {
+	width: 20px;
+	height: 20px;
+	flex: none;
+	border: 2px solid currentColor;
+	border-right-color: transparent;
+	border-radius: 50%;
+	opacity: .7;
+	animation: ffbp-spin .8s linear infinite;
+}
+#ffbp-overlay .ffbp-detail {
+	font-size: 14px;
+	line-height: 1.65;
+	opacity: .9;
+}
+#ffbp-overlay .ffbp-log {
+	max-height: 190px;
+	overflow: auto;
+	padding: 10px 12px;
+	border-radius: 8px;
+	background: rgba(127, 127, 127, .1);
+	font: 12px/1.7 Consolas, "Courier New", monospace;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+#ffbp-overlay .ffbp-log:empty { display: none; }
+#ffbp-overlay .ffbp-elapsed {
+	font-size: 12px;
+	text-align: right;
+	opacity: .6;
+}
+@keyframes ffbp-spin { to { transform: rotate(360deg); } }
+`;
+
 	prepare = async () => {
 		this.root = this.config.BLOG_ROOT || "";
 		this.postsDir = path.join(this.root, "src", "content", "posts");
@@ -46,25 +113,82 @@ class BlogPlugin extends BasePlugin {
 		} catch (error) {
 			console.warn("[blog] 监听文件打开失败：", error);
 		}
+	}
 
-		// Typora 1.12 把插件按钮插在 <content> 里，可能被内容层裁剪。
-		// 移动到 body 后，浮动按钮才能真正显示在窗口右下角。
-		const moveToolbarToBody = () => {
-			try {
-				const toolbar = document.querySelector("#plugin-action-buttons");
-				if (toolbar && toolbar.parentElement !== document.body) {
-					document.body.appendChild(toolbar);
-					toolbar.style.zIndex = "2147483647";
-				}
-			} catch (error) {
-				console.warn("[blog] 调整浮动按钮位置失败：", error);
-			}
+	showProgress = (title, detail = "准备中…") => {
+		this.closeProgress();
+		const overlay = document.createElement("div");
+		overlay.id = "ffbp-overlay";
+		overlay.innerHTML = `
+			<div class="ffbp-card">
+				<div class="ffbp-head"><span class="ffbp-spinner"></span><span class="ffbp-title"></span></div>
+				<div class="ffbp-detail"></div>
+				<div class="ffbp-log"></div>
+				<div class="ffbp-elapsed">已等待 0 秒</div>
+			</div>`;
+		overlay.querySelector(".ffbp-title").textContent = title;
+		overlay.querySelector(".ffbp-detail").textContent = detail;
+		document.body.appendChild(overlay);
+
+		const startedAt = Date.now();
+		const elapsedEl = overlay.querySelector(".ffbp-elapsed");
+		const timer = setInterval(() => {
+			const seconds = Math.floor((Date.now() - startedAt) / 1000);
+			elapsedEl.textContent = seconds >= 60 ? `已等待 ${seconds} 秒，仍在处理中…` : `已等待 ${seconds} 秒`;
+		}, 500);
+
+		this._progress = {
+			overlay,
+			detailEl: overlay.querySelector(".ffbp-detail"),
+			logEl: overlay.querySelector(".ffbp-log"),
+			timer,
+			startedAt,
+			lastStep: "",
 		};
-		setTimeout(moveToolbarToBody, 1200);
+		this.progressStep(detail);
+	}
+
+	progressStep = (text) => {
+		if (!this._progress) return;
+		const clean = String(text || "").trim();
+		if (!clean || clean === this._progress.lastStep) return;
+		this._progress.lastStep = clean;
+		this._progress.detailEl.textContent = clean;
+		const time = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+		const line = document.createElement("div");
+		line.textContent = `[${time}] ${clean}`;
+		this._progress.logEl.appendChild(line);
+		this._progress.logEl.scrollTop = this._progress.logEl.scrollHeight;
+	}
+
+	closeProgress = () => {
+		if (!this._progress) return;
+		clearInterval(this._progress.timer);
+		this._progress.overlay.remove();
+		this._progress = null;
+	}
+
+	_delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+	_finishProgress = async (startedAt, minimumMs = 700) => {
+		await this._delay(Math.max(0, minimumMs - (Date.now() - startedAt)));
+		this.closeProgress();
+	}
+
+	_showResult = async ({ type = "info", title, message, detail = "", buttons = ["知道了"], onResponse }) => {
 		try {
-			this.utils.eventHub.on(this.utils.eventHub.eventType.allPluginsHadInjected, () => setTimeout(moveToolbarToBody, 0));
+			const result = await this.utils.showMessageBox({
+				type,
+				title,
+				message,
+				detail,
+				buttons,
+				defaultId: 0,
+				cancelId: buttons.length - 1,
+			});
+			if (onResponse) onResponse(result.response);
 		} catch (error) {
-			console.warn("[blog] 监听插件加载完成失败：", error);
+			this._error(message || "操作失败：" + error.message);
 		}
 	}
 
@@ -87,6 +211,9 @@ class BlogPlugin extends BasePlugin {
 		}
 		if (this.config.TEST_HOTKEY) {
 			hotkeys.push({ hotkey: this.config.TEST_HOTKEY, callback: this.testPush });
+		}
+		if (this.config.TOOLS_HOTKEY) {
+			hotkeys.push({ hotkey: this.config.TOOLS_HOTKEY, callback: this.openTools });
 		}
 		return hotkeys;
 	}
@@ -160,9 +287,11 @@ class BlogPlugin extends BasePlugin {
 			return false;
 		}
 
+		const startedAt = Date.now();
+		this.showProgress(all ? "发布全部文章" : "发布当前文章", "正在保存当前文件…");
 		try {
-			this.utils.notification.show(all ? "正在发布全部文章更改……" : "正在发布当前文章……", "info");
 			await this._saveCurrentFile();
+			this.progressStep("文件已保存，正在校验文章和图片…");
 			const args = [
 				"-NoProfile",
 				"-ExecutionPolicy",
@@ -173,18 +302,67 @@ class BlogPlugin extends BasePlugin {
 				filePath,
 			];
 			if (all) args.push("-All");
-			this._runPowerShell(args, (error, result) => {
-				if (result) {
-					this.utils.notification.show(
-						result.message || (result.success ? "发布成功" : "发布失败"),
-						result.success ? "success" : "error",
-					);
-					return;
-				}
-				this._error("发布失败：" + (error || "脚本没有返回结果"));
+
+			const result = await new Promise((resolve, reject) => {
+				this._runPowerShell(
+					args,
+					(error, data) => {
+						if (data) {
+							resolve(data);
+							return;
+						}
+						reject(new Error(error || "发布脚本没有返回结果"));
+					},
+					(line) => this.progressStep(line),
+				);
+			});
+
+			await this._finishProgress(startedAt);
+			if (!result.success) {
+				await this._showResult({
+					type: "error",
+					title: "发布失败",
+					message: "发布没有完成。",
+					detail: result.message || "脚本返回失败，但没有提供具体原因。",
+					buttons: ["知道了"],
+				});
+				return false;
+			}
+
+			const noChanges = /没有需要/.test(result.message || "");
+			const url = result.url || "";
+			const actionsUrl = "https://github.com/JinlinXingjian/firefly-blog/actions";
+			const detail = [
+				result.title ? `文章：${result.title}` : "",
+				result.draft ? "状态：草稿（线上暂时不显示）" : "状态：已发布",
+				url ? `地址：${url}` : "",
+				result.commit ? `提交：${result.commit}` : "",
+				"",
+				noChanges ? "没有检测到新的改动。" : "Cloudflare Pages 通常会在 1–2 分钟内更新。",
+			]
+				.filter(Boolean)
+				.join("\n");
+
+			await this._showResult({
+				title: noChanges ? "无需发布" : "发布成功",
+				message: result.message || (noChanges ? "没有需要发布的内容。" : "文章已推送。"),
+				detail,
+				buttons: noChanges ? ["知道了"] : ["打开文章", "查看构建", "关闭"],
+				onResponse: (response) => {
+					if (noChanges) return;
+					if (response === 0 && url) this.utils.openUrl(url);
+					if (response === 1) this.utils.openUrl(actionsUrl);
+				},
 			});
 		} catch (error) {
-			this._error("发布失败：" + error.message);
+			await this._finishProgress(startedAt);
+			await this._showResult({
+				type: "error",
+				title: "发布失败",
+				message: "发布没有完成。",
+				detail: error.message || String(error),
+				buttons: ["知道了"],
+			});
 		}
 		return false;
 	}
@@ -239,35 +417,71 @@ class BlogPlugin extends BasePlugin {
 			await this._runKeyScript(args);
 			return false;
 		} catch (error) {
-			this._error("密钥管理失败：" + error.message);
+			await this._showResult({
+				type: "error",
+				title: "密钥管理失败",
+				message: "没有完成密钥操作。",
+				detail: error.message || String(error),
+				buttons: ["知道了"],
+			});
 			return false;
 		}
 	}
 
 	testPush = async () => {
+		const startedAt = Date.now();
+		this.showProgress("测试 GitHub 推送", "正在连接 GitHub…");
 		try {
-			this.utils.notification.show("正在测试 SSH 和 GitHub 推送权限……", "info");
-			this._runPowerShell(
-				["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", path.join(this.pluginDir, "test-push.ps1")],
-				(error, result) => {
-					if (!result) {
-						this._error("推送测试失败：" + (error || "脚本没有返回结果"));
-						return;
-					}
-					if (result.success) {
-						this.utils.notification.show(result.message || "推送测试通过", "success");
-						return;
-					}
-					this.utils.showMessageBox({
-						type: "error",
-						title: "推送测试失败",
-						message: result.message || "推送测试失败",
-						detail: result.detail || "",
-					});
-				},
-			);
+			const result = await new Promise((resolve, reject) => {
+				this._runPowerShell(
+					["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", path.join(this.pluginDir, "test-push.ps1")],
+					(error, data) => {
+						if (data) {
+							resolve(data);
+							return;
+						}
+						reject(new Error(error || "推送测试脚本没有返回结果"));
+					},
+					(line) => this.progressStep(line),
+				);
+			});
+
+			await this._finishProgress(startedAt);
+			if (!result.success) {
+				await this._showResult({
+					type: "error",
+					title: "推送测试失败",
+					message: "GitHub 连接或推送权限有问题。",
+					detail: [result.message, result.detail].filter(Boolean).join("\n\n"),
+					buttons: ["知道了"],
+				});
+				return false;
+			}
+
+			await this._showResult({
+				title: "推送测试通过",
+				message: result.message || "SSH 认证和推送权限正常。",
+				detail: [
+					"SSH 认证：通过",
+					"仓库读取：通过",
+					"推送权限：通过",
+					result.remote ? `远程仓库：${result.remote}` : "",
+					"",
+					"现在可以正常发布文章了。",
+				]
+					.filter(Boolean)
+					.join("\n"),
+				buttons: ["知道了"],
+			});
 		} catch (error) {
-			this._error("推送测试失败：" + error.message);
+			await this._finishProgress(startedAt);
+			await this._showResult({
+				type: "error",
+				title: "推送测试失败",
+				message: "测试没有完成。",
+				detail: error.message || String(error),
+				buttons: ["知道了"],
+			});
 		}
 		return false;
 	}
@@ -327,44 +541,68 @@ class BlogPlugin extends BasePlugin {
 	}
 
 	_runKeyScript = async (args) => {
-		const result = await new Promise((resolve, reject) => {
-			this._runPowerShell(
-				[
-					"-NoProfile",
-					"-ExecutionPolicy",
-					"Bypass",
-					"-File",
-					path.join(this.pluginDir, "setup-key.ps1"),
-					"-NoOpen",
-					...args,
-				],
-				(error, data) => {
-					if (data) {
-						resolve(data);
-						return;
-					}
-					reject(new Error(error || "密钥脚本没有返回结果"));
-				},
-			);
-		});
-		if (!result.success) {
-			throw new Error(result.message || "密钥脚本执行失败");
-		}
+		const startedAt = Date.now();
+		this.showProgress("GitHub 发布密钥", "正在读取本机密钥…");
+		try {
+			const result = await new Promise((resolve, reject) => {
+				this._runPowerShell(
+					[
+						"-NoProfile",
+						"-ExecutionPolicy",
+						"Bypass",
+						"-File",
+						path.join(this.pluginDir, "setup-key.ps1"),
+						"-NoOpen",
+						...args,
+					],
+					(error, data) => {
+						if (data) {
+							resolve(data);
+							return;
+						}
+						reject(new Error(error || "密钥脚本没有返回结果"));
+					},
+					(line) => this.progressStep(line),
+				);
+			});
 
-		const copied = await this._copyText(result.publicKey);
-		await this.utils.formDialog.modal({
-			title: copied ? "公钥已复制" : "发布公钥",
-			schema: ({ Group, Controls }) => Group(
-				Controls.Textarea("publicKey")
-					.Label(copied ? "公钥（已复制到剪贴板）" : "公钥（请手动复制）")
-					.Rows(5)
-					.Readonly(true)
-					.IsBlockLayout(true),
-			),
-			data: { publicKey: result.publicKey },
-		});
-		this.utils.notification.show(result.message || "密钥已就绪", "success");
-		this.utils.openUrl(result.githubUrl || this.githubKeysUrl);
+			await this._finishProgress(startedAt);
+			if (!result.success) {
+				await this._showResult({
+					type: "error",
+					title: "密钥管理失败",
+					message: "没有完成密钥操作。",
+					detail: result.message || "密钥脚本返回失败。",
+					buttons: ["知道了"],
+				});
+				return false;
+			}
+
+			const copied = await this._copyText(result.publicKey);
+			await this.utils.formDialog.modal({
+				title: copied ? "公钥已复制" : "发布公钥",
+				schema: ({ Group, Controls }) => Group(
+					Controls.Textarea("publicKey")
+						.Label(copied ? "公钥（已复制到剪贴板）" : "公钥（请手动复制）")
+						.Rows(5)
+						.Readonly(true)
+						.IsBlockLayout(true),
+				),
+				data: { publicKey: result.publicKey },
+			});
+			this.utils.openUrl(result.githubUrl || this.githubKeysUrl);
+			return true;
+		} catch (error) {
+			await this._finishProgress(startedAt);
+			await this._showResult({
+				type: "error",
+				title: "密钥管理失败",
+				message: "没有完成密钥操作。",
+				detail: error.message || String(error),
+				buttons: ["知道了"],
+			});
+			return false;
+		}
 	}
 
 	_copyText = async (text) => {
@@ -445,8 +683,21 @@ class BlogPlugin extends BasePlugin {
 		});
 	}
 
-	_runPowerShell = (args, callback) => {
-		execFile(
+	_runPowerShell = (args, callback, onProgress) => {
+		let progressBuffer = "";
+		const emitProgress = (chunk) => {
+			progressBuffer += chunk.toString();
+			const lines = progressBuffer.split(/\r?\n/);
+			progressBuffer = lines.pop() || "";
+			for (const line of lines) {
+				const text = line.trim();
+				if (text.startsWith("BLOG_PROGRESS:")) {
+					onProgress?.(text.slice("BLOG_PROGRESS:".length).trim());
+				}
+			}
+		};
+
+		const child = execFile(
 			"powershell.exe",
 			args,
 			{ cwd: this.root, windowsHide: true, maxBuffer: 20 * 1024 * 1024 },
@@ -464,6 +715,8 @@ class BlogPlugin extends BasePlugin {
 				callback((stderr || text || error?.message || "脚本没有返回结果").trim(), null);
 			},
 		);
+		child.stdout?.on("data", emitProgress);
+		child.stderr?.on("data", emitProgress);
 	}
 
 	_error = (message) => {

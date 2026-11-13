@@ -144,6 +144,7 @@ function Set-GitRemote {
 }
 
 try {
+    Write-Output "BLOG_PROGRESS:正在检查本机密钥..."
     if (-not (Test-Path -LiteralPath $SshDir -PathType Container)) {
         New-Item -ItemType Directory -Path $SshDir -Force | Out-Null
     }
@@ -177,6 +178,7 @@ try {
     }
 
     $publicKey = Get-PublicKeyText
+    Write-Output "BLOG_PROGRESS:正在写入 SSH 和 Git 配置..."
     Set-GitHubSshConfig
     Add-GitHubKnownHost
     Set-GitRemote

@@ -5,6 +5,9 @@ HOTKEY = "ctrl+alt+b"
 NEW_POST_HOTKEY = "ctrl+alt+n"
 PUBLISH_HOTKEY = "ctrl+alt+p"
 PUBLISH_ALL_HOTKEY = "ctrl+alt+shift+p"
+TOOLS_HOTKEY = "ctrl+alt+o"
+KEY_HOTKEY = "ctrl+alt+k"
+TEST_HOTKEY = "ctrl+alt+t"
 # 以下路径和按钮通常不用手动改：运行 typora-plugin/install.ps1 会自动写入。
 BLOG_ROOT = 'C:\path\to\firefly-blog'
 SITE_URL = "https://jinlinxingjian-blog.pages.dev"

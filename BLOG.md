@@ -32,9 +32,11 @@ GitHub 上的 `firefly-blog` **就是博客本体仓库**，不是构建后的�
 | ＋ | 新建文章 | `Ctrl+Alt+N` |
 | ☁ | 发布当前文章 | `Ctrl+Alt+P` |
 | ↗ | 打开线上博客 | — |
-| ⋯ | 其他：密钥管理 / 测试推送 / 文章目录 / GitHub / 说明 | — |
+| ⋯ | 其他：密钥管理 / 测试推送 / 文章目录 / GitHub / 说明 | `Ctrl+Alt+O` |
 
 发布全部博客改动：`Ctrl+Alt+Shift+P`。
+
+「其他」快捷键：`Ctrl+Alt+O`；密钥管理 `Ctrl+Alt+K`；测试推送 `Ctrl+Alt+T`。
 
 详细说明见 [typora-plugin/README.md](typora-plugin/README.md)。
 

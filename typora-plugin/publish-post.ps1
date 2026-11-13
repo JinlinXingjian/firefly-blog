@@ -4,7 +4,10 @@
     [switch]$All
 )
 
-$ErrorActionPreference = "Stop"
+# git 会把正常进度（remote:、To、Everything up-to-date）写到 stderr。
+# Windows PowerShell 5.1 在 Stop 模式下会把它当成异常，导致“推送成功但提示失败”。
+# 因此这里用 Continue，每个原生命令都单独检查 $LASTEXITCODE。
+$ErrorActionPreference = "Continue"
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
 $OutputEncoding = [System.Text.UTF8Encoding]::new()
 
@@ -58,6 +61,7 @@ function Test-LocalProxy {
 }
 
 try {
+    Write-Output "BLOG_PROGRESS:正在检查文章和图片..."
     if (-not (Test-Path -LiteralPath $FilePath -PathType Leaf)) {
         Fail-Publish "找不到当前文章：$FilePath"
     }
@@ -110,11 +114,13 @@ try {
         Fail-Publish ("以下图片不在文章资源目录 " + (Split-Path -Leaf $assetsDir) + " 中：`n" + ($outsideImages -join "`n") + "`n请在 Typora 中把图片重新插入到该目录，或手动移到该目录。")
     }
 
+    Write-Output "BLOG_PROGRESS:正在生成历史工作台..."
     # 先更新历史工作台，再决定是否真的有改动
     $indexOutput = & node (Join-Path $PSScriptRoot "build-index.mjs") 2>&1
     if ($LASTEXITCODE -ne 0) {
         Fail-Publish ("生成 BLOG_INDEX.md 失败：`n" + ($indexOutput -join "`n"))
     }
+    Write-Output "BLOG_PROGRESS:正在检查 Git 状态..."
 
     $branch = (& git -C $RepoRoot rev-parse --abbrev-ref HEAD 2>&1 | Out-String).Trim()
     if ($LASTEXITCODE -ne 0) { Fail-Publish "无法读取 Git 分支，请确认仓库状态" }
@@ -140,7 +146,8 @@ try {
         exit 0
     }
 
-    $null = (& git -C $RepoRoot add -- @paths 2>$null | Out-String).Trim()
+    $addOutput = (& git -C $RepoRoot add -- @paths 2>$null | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0) { Fail-Publish ("git add 失败：`n" + $addOutput) }
 
     & git -C $RepoRoot diff --cached --quiet -- @paths
     $diffCode = $LASTEXITCODE
@@ -151,12 +158,14 @@ try {
     if ($diffCode -ne 1) { Fail-Publish "无法检查暂存区状态（git diff 退出码 $diffCode）" }
 
     $commitMessage = "post: $title"
+    Write-Output "BLOG_PROGRESS:正在创建 Git 提交..."
     $commitOutput = (& git -C $RepoRoot commit -m $commitMessage 2>&1 | Out-String).Trim()
     if ($LASTEXITCODE -ne 0) { Fail-Publish "git commit 失败：`n$commitOutput" }
 
     $localHead = (& git -C $RepoRoot rev-parse HEAD 2>&1 | Out-String).Trim()
     $proxy = Test-LocalProxy
     $env:GIT_TERMINAL_PROMPT = "0"
+    Write-Output "BLOG_PROGRESS:正在推送到 GitHub..."
     if ($proxy) {
         $pushOutput = (& git -C $RepoRoot -c "http.proxy=$proxy" -c "https.proxy=$proxy" push origin master 2>&1 | Out-String).Trim()
     } else {
@@ -169,6 +178,7 @@ try {
         }
     }
 
+    Write-Output "BLOG_PROGRESS:推送完成，正在整理结果..."
     $postSlug = [System.IO.Path]::GetFileNameWithoutExtension($postFile)
     $isDraft = $draftText -eq "true"
     $message = if ($isDraft) {
