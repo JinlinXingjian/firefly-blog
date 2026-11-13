@@ -8,10 +8,11 @@ GitHub 仓库：<https://github.com/JinlinXingjian/firefly-blog>
 > 密钥管理和测试推送收在「⋯ 其他」里。
 > 历史文章按发布日期倒序排列；文章正文直接点击标题打开。
 
-## 文章（1）
+## 文章（2）
 
 | 日期 | 标题 | 分类 | 状态 | 线上 |
 | --- | --- | --- | --- | --- |
+| 2026-11-13 | [测试文章123](src/content/posts/ce-shi-wen-zhang-123.md) | 测试 | 已发布 | [打开](https://jinlinxingjian-blog.pages.dev/posts/ce-shi-wen-zhang-123/) |
 | 2026-11-12 | [你好，世界](src/content/posts/hello-world.md) | 生活 | 已发布 | [打开](https://jinlinxingjian-blog.pages.dev/posts/hello-world/) |
 
 ---
