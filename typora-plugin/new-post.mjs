@@ -2,7 +2,7 @@
 /**
  * 新建 Typora 博客文章。
  * 用法：
- *   node scripts/typora/new-post.mjs --title "文章标题" [--category "分类"] [--tags "标签1,标签2"]
+ *   node typora-plugin/new-post.mjs --title "文章标题" [--category "分类"] [--tags "标签1,标签2"]
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -11,7 +11,7 @@ import { pinyin } from "pinyin-pro";
 import { buildIndex } from "./build-index.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(__dirname, "..", "..");
+const REPO_ROOT = path.resolve(__dirname, "..");
 const POSTS_DIR = path.join(REPO_ROOT, "src", "content", "posts");
 
 function arg(name, fallback = "") {

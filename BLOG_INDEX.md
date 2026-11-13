@@ -5,6 +5,7 @@
 GitHub 仓库：<https://github.com/JinlinXingjian/firefly-blog>
 
 > 在 Typora 右下角使用「新建文章」「发布当前文章」。
+> 密钥管理和测试推送收在「⋯ 其他」里。
 > 历史文章按发布日期倒序排列；文章正文直接点击标题打开。
 
 ## 文章（1）

@@ -8,13 +8,23 @@
 - 备用：https://jinlinxingjian-blog.vercel.app （Vercel，`vercel.app` 在国内可能被 DNS 污染）
 - 源码：https://github.com/JinlinXingjian/firefly-blog
 
-Cloudflare Pages 自动部署使用 `.github/workflows/deploy-cloudflare.yml`，已配置 `CLOUDFLARE_API_TOKEN` Secret。push 到 `master` 会自动构建并发布。
+Cloudflare Pages 自动部署使用 `.github/workflows/deploy-cloudflare.yml`，已配置 `CLOUDFLARE_API_TOKEN` Secret。push 到 `master` 后由 GitHub Actions 构建，再用 Wrangler 上传 `dist`。
+
+## 仓库与部署架构
+
+GitHub 上的 `firefly-blog` **就是博客本体仓库**，不是构建后的静态网站仓库。
+
+- 仓库里是 Astro 源码：`src/`、`src/content/posts/`、主题配置、`typora-plugin/`。
+- `dist/` 是构建产物，不提交到 Git。
+- Cloudflare Pages 使用 Direct Upload，没有直接连接 Git；GitHub Actions 负责构建和上传。
+- Vercel 是备用，也从同一个源码仓库构建。
+- 所以不需要再建一个“博客本体仓库”，clone 这个仓库就得到完整写作环境。
 
 ## Typora 写作工作流
 
 当前电脑已经安装 Typora 1.12.4 + Typora Plugin 1.19.15，并配置了自定义博客插件。
 
-打开 Typora 后，右下角有 4 个按钮：
+打开 Typora 后，右下角有 5 个按钮：
 
 | 按钮 | 功能 | 快捷键 |
 |---|---|---|
@@ -22,10 +32,11 @@ Cloudflare Pages 自动部署使用 `.github/workflows/deploy-cloudflare.yml`，
 | ＋ | 新建文章 | `Ctrl+Alt+N` |
 | ☁ | 发布当前文章 | `Ctrl+Alt+P` |
 | ↗ | 打开线上博客 | — |
+| ⋯ | 其他：密钥管理 / 测试推送 / 文章目录 / GitHub / 说明 | — |
 
 发布全部博客改动：`Ctrl+Alt+Shift+P`。
 
-详细说明见 [scripts/typora/README.md](scripts/typora/README.md)。
+详细说明见 [typora-plugin/README.md](typora-plugin/README.md)。
 
 ### 图片
 
@@ -88,7 +99,7 @@ git commit -m "post: 文章标题"
 git push
 ```
 
-推送到 GitHub 后，Cloudflare Pages 会自动重新构建和发布。
+推送到 GitHub 后，GitHub Actions 会自动重新构建并发布到 Cloudflare Pages。
 
 ## Vercel 设置
 
@@ -107,22 +118,25 @@ git push
 ## 换电脑后
 
 ```bash
-git clone git@github.com:JinlinXingjian/firefly-blog.git
+git clone https://github.com/JinlinXingjian/firefly-blog.git
 cd firefly-blog
 pnpm install
 pnpm dev
 ```
 
-新电脑还需要：
+如果只写作、不本地预览，可以不做 `pnpm install`，`setup.ps1` 会自动安装依赖。
 
-1. 安装 Typora Plugin
-2. 复制 `scripts/typora/blog.js` 到 Typora 插件目录
-3. 参考 `scripts/typora/settings.user.example.toml` 配置 `BLOG_ROOT`
-4. 把新电脑的 SSH 公钥添加到 GitHub
+新电脑还需要 Typora 和 Typora Plugin（第三方框架，不在本仓库中）。装好后运行：
 
-具体步骤见 [scripts/typora/README.md](scripts/typora/README.md)。
+```powershell
+powershell -ExecutionPolicy Bypass -File .\typora-plugin\setup.ps1
+```
 
-编辑前先 `git pull`，编辑后 `git add` / `commit` / `push`。
+脚本会自动复制插件、写入当前仓库路径、生成 SSH 密钥、配置 GitHub 443，并把公钥复制到剪贴板。把公钥粘贴到 GitHub 后，重启 Typora，点击「⋯ 其他」→「测试推送」即可。
+
+细节见 [typora-plugin/README.md](typora-plugin/README.md)。
+
+多台电脑交替写作时，开始前先 `git pull`；发布脚本不会自动拉取远程提交。
 
 ## 国内访问说明
 

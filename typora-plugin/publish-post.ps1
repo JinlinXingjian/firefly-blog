@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
 $OutputEncoding = [System.Text.UTF8Encoding]::new()
 
-$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $PostsDir = Join-Path $RepoRoot "src\content\posts"
 $IndexFile = Join-Path $RepoRoot "BLOG_INDEX.md"
 $SiteUrl = "https://jinlinxingjian-blog.pages.dev"
@@ -111,7 +111,7 @@ try {
     }
 
     # 先更新历史工作台，再决定是否真的有改动
-    $indexOutput = & node (Join-Path $RepoRoot "scripts\typora\build-index.mjs") 2>&1
+    $indexOutput = & node (Join-Path $PSScriptRoot "build-index.mjs") 2>&1
     if ($LASTEXITCODE -ne 0) {
         Fail-Publish ("生成 BLOG_INDEX.md 失败：`n" + ($indexOutput -join "`n"))
     }
