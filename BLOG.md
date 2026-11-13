@@ -10,6 +10,37 @@
 
 Cloudflare Pages 自动部署使用 `.github/workflows/deploy-cloudflare.yml`，已配置 `CLOUDFLARE_API_TOKEN` Secret。push 到 `master` 会自动构建并发布。
 
+## Typora 写作工作流
+
+当前电脑已经安装 Typora 1.12.4 + Typora Plugin 1.19.15，并配置了自定义博客插件。
+
+打开 Typora 后，右下角有 4 个按钮：
+
+| 按钮 | 功能 | 快捷键 |
+|---|---|---|
+| 📖 | 博客模式：打开 `BLOG_INDEX.md` 历史工作台 | `Ctrl+Alt+B` |
+| ＋ | 新建文章 | `Ctrl+Alt+N` |
+| ☁ | 发布当前文章 | `Ctrl+Alt+P` |
+| ↗ | 打开线上博客 | — |
+
+发布全部博客改动：`Ctrl+Alt+Shift+P`。
+
+详细说明见 [scripts/typora/README.md](scripts/typora/README.md)。
+
+### 图片
+
+Typora 会自动把图片复制到：
+
+```text
+src/content/posts/<文章slug>.assets/
+```
+
+Markdown 使用相对路径，不需要图床。
+
+### 发布
+
+发布脚本只提交当前文章、它的图片和 `BLOG_INDEX.md`，然后 push 到 GitHub；GitHub Actions 自动部署到 Cloudflare Pages。
+
 ## 还要替换的地方
 
 1. `src/config/siteConfig.ts`
@@ -39,8 +70,14 @@ pnpm preview
 
 ## 发文章
 
+### 推荐：Typora 插件
+
+点击右下角「新建文章」，填写标题、分类、标签，写完点击「发布当前文章」。
+
+### 命令行方式
+
 ```bash
-pnpm new-post 文章文件名
+pnpm new-post 文章slug
 ```
 
 文章在 `src/content/posts/`，写完后：
@@ -51,7 +88,7 @@ git commit -m "post: 文章标题"
 git push
 ```
 
-推送到 GitHub 后，Vercel 会自动重新构建和发布。
+推送到 GitHub 后，Cloudflare Pages 会自动重新构建和发布。
 
 ## Vercel 设置
 
@@ -70,11 +107,20 @@ git push
 ## 换电脑后
 
 ```bash
-git clone https://github.com/<你的用户名>/firefly-blog.git
+git clone git@github.com:JinlinXingjian/firefly-blog.git
 cd firefly-blog
 pnpm install
 pnpm dev
 ```
+
+新电脑还需要：
+
+1. 安装 Typora Plugin
+2. 复制 `scripts/typora/blog.js` 到 Typora 插件目录
+3. 参考 `scripts/typora/settings.user.example.toml` 配置 `BLOG_ROOT`
+4. 把新电脑的 SSH 公钥添加到 GitHub
+
+具体步骤见 [scripts/typora/README.md](scripts/typora/README.md)。
 
 编辑前先 `git pull`，编辑后 `git add` / `commit` / `push`。
 
