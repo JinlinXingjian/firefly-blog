@@ -12,3 +12,5 @@ draft: false
 这是一次发布链路测试。
 
 第二次发布测试。
+
+![image-20261113150922284](typora-ce-shi-wen-zhang.assets/image-20261113150922284.png)
