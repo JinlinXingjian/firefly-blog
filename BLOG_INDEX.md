@@ -7,11 +7,10 @@ GitHub 仓库：<https://github.com/JinlinXingjian/firefly-blog>
 > 在 Typora 右下角使用「新建文章」「发布当前文章」。
 > 历史文章按发布日期倒序排列；文章正文直接点击标题打开。
 
-## 文章（2）
+## 文章（1）
 
 | 日期 | 标题 | 分类 | 状态 | 线上 |
 | --- | --- | --- | --- | --- |
-| 2026-11-12 | [Typora 测试文章](src/content/posts/typora-ce-shi-wen-zhang.md) | 测试 | 已发布 | [打开](https://jinlinxingjian-blog.pages.dev/posts/typora-ce-shi-wen-zhang/) |
 | 2026-11-12 | [你好，世界](src/content/posts/hello-world.md) | 生活 | 已发布 | [打开](https://jinlinxingjian-blog.pages.dev/posts/hello-world/) |
 
 ---
